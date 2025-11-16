@@ -90,7 +90,7 @@
     <div class="wrap">
       <div class="hero">
         <div class="page-title">TimeSphere Status</div>
-        <div class="page-sub">Live summary of platform components — main page, login, users, items, creating items, storage, quests and user settings. Maintenance messages appear below.</div>
+        <div class="page-sub">Live summary of platform components. Maintenance messages appear below.</div>
       </div>
 
       <div class="panel" id="panelRoot">
@@ -113,7 +113,7 @@
       </div>
 
       <div style="height:18px"></div>
-      <div style="color:var(--muted);font-size:13px;text-align:center">Status updates are pulled from our public `status-uptime` collection.</div>
+      <div style="color:var(--muted);font-size:13px;text-align:center">Status updates every 60 seconds.</div>
     </div>
   </main>
 
@@ -265,7 +265,7 @@
         });
 
         if(historyDocs.length === 0){
-          historyList.innerHTML = `<div class="hist-empty">not found history in 30 Days period.</div>`;
+          historyList.innerHTML = `<div class="hist-empty">Not found history in 30 Days period.</div>`;
         } else {
           // display as buttons
           for(const id of historyDocs){
