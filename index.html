@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TimeSphere Status</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    /* Distinct status page style (modern, different palette) */
+    :root{
+      --bg1: #0f1724;
+      --bg2: linear-gradient(180deg,#0f1724, #13192b);
+      --card: rgba(255,255,255,0.03);
+      --accent: #ff7a2d;
+      --glass: rgba(255,255,255,0.04);
+      --muted: rgba(255,255,255,0.7);
+      --maxw: 980px;
+      --ui-radius: 12px;
+      --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:var(--bg2);font-family:var(--font);color:#fff}
+    header{display:flex;align-items:center;gap:16px;padding:20px 24px;background:transparent;border-bottom:1px solid rgba(255,255,255,0.03);position:sticky;top:0;z-index:30}
+    .logo{display:flex;align-items:center;gap:10px}
+    .logo .dot{width:36px;height:36px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#e64b7a);display:grid;place-items:center;font-weight:700;color:#000}
+    .title{font-weight:700;font-size:1.05rem}
+    .sub{color:var(--muted);font-size:0.9rem;margin-left:auto}
+
+    main{display:flex;justify-content:center;padding:36px 16px}
+    .wrap{width:100%;max-width:var(--maxw);}
+
+    .hero{display:flex;flex-direction:column;gap:18px;margin-bottom:22px;align-items:center;text-align:center}
+    .page-title{font-size:1.6rem;font-weight:800}
+    .page-sub{color:var(--muted);max-width:800px}
+
+    .panel{background:var(--card);border-radius:var(--ui-radius);padding:18px;box-shadow:0 8px 30px rgba(3,6,15,0.6);}
+
+    .summary{
+      margin:12px 0 18px;display:flex;flex-direction:column;gap:12px;align-items:center;
+    }
+    .big-status{
+      width:100%;max-width:720px;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;
+      font-weight:800;font-size:1.05rem;color:#000;
+    }
+
+    /* colors for big status - applied via classes */
+    .big-red{background:linear-gradient(90deg,#ff4b4b,#e23b3b);}
+    .big-orange{background:linear-gradient(90deg,#ff9400,#ff7a2d);}
+    .big-yellow{background:linear-gradient(90deg,#ffd24d,#ffcc3b);color:#111}
+    .big-green{background:linear-gradient(90deg,#3ccf8e,#2fd07a);color:#021}
+
+    .services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;margin-top:8px}
+    .service-row{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:var(--glass);font-weight:600}
+    .pill{min-width:86px;text-align:center;padding:6px 10px;border-radius:999px;font-weight:700}
+    .pill.green{background:#0f7b4d;color:#dff7ea}
+    .pill.yellow{background:#d4b03a;color:#111}
+    .pill.orange{background:#d97b2d;color:#111}
+    .pill.red{background:#b93b3b;color:#fff}
+
+    .maintenance{margin-top:14px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);color:var(--muted);line-height:1.5}
+    .maintenance p{margin:8px 0}
+
+    .history{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+    .hist-row{display:flex;gap:8px;align-items:center}
+    .hist-btn{padding:8px 12px;border-radius:10px;background:linear-gradient(90deg,#6d7cff,#4db0ff);color:#000;font-weight:700;border:none;cursor:pointer;text-decoration:none}
+    .hist-empty{color:var(--muted);font-style:italic}
+
+    /* small responsive */
+    @media(max-width:720px){
+      .services-grid{grid-template-columns:1fr}
+      .page-title{font-size:1.25rem}
+      .big-status{font-size:1rem}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="dot">TS</div>
+      <div>
+        <div class="title">TimeSphere Status</div>
+        <div style="font-size:12px;color:var(--muted)">Public system status & uptime</div>
+      </div>
+    </div>
+    <div class="sub">Status feed (no login required)</div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="hero">
+        <div class="page-title">TimeSphere Status</div>
+        <div class="page-sub">Live summary of platform components — main page, login, users, items, creating items, storage, quests and user settings. Maintenance messages appear below.</div>
+      </div>
+
+      <div class="panel" id="panelRoot">
+        <div class="summary">
+          <div id="overallBox" class="big-status big-red">Loading overall status…</div>
+
+          <div class="services-grid" id="servicesGrid" aria-live="polite">
+            <!-- rows injected here -->
+          </div>
+
+          <div class="maintenance" id="maintenanceArea" style="display:none">
+            <!-- maintenance texts -->
+          </div>
+
+          <div class="history">
+            <div style="font-weight:700">Maintenance History in 30 Days</div>
+            <div id="historyList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:18px"></div>
+      <div style="color:var(--muted);font-size:13px;text-align:center">Status updates are pulled from our public `status-uptime` collection.</div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc, getDocs, collection
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+    // firebase config (same as your project)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBiGzil9wA3CXZWxWjHsn7iKPkiYQozQW8",
+      authDomain: "timesphere-9f7e0.firebaseapp.com",
+      projectId: "timesphere-9f7e0",
+      storageBucket: "timesphere-9f7e0.appspot.com",
+      messagingSenderId: "94629610195",
+      appId: "1:94629610195:web:a037e5c5aa0c5ba7e50a26"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // DOM refs
+    const overallBox = document.getElementById('overallBox');
+    const servicesGrid = document.getElementById('servicesGrid');
+    const maintenanceArea = document.getElementById('maintenanceArea');
+    const historyList = document.getElementById('historyList');
+
+    // expected 8 keys (as per spec)
+    const EXPECTED_KEYS = [
+      'mainPageUp',
+      'loginUp',
+      'UsersUp',
+      'ItemsUp',
+      'CreatingItemesUp',
+      'StorageUp',
+      'QuestUp',
+      'userSettingsUp'
+    ];
+
+    // mapping field value => short label color
+    function stateColorMap(val){
+      if(!val) return { cls:'red', label:'No' };
+      const v = String(val).trim();
+      if(v.toLowerCase() === 'yes') return { cls:'green', label:'Yes' };
+      if(v.toLowerCase() === 'mid') return { cls:'yellow', label:'Mid' };
+      if(v.toLowerCase() === 'degraded') return { cls:'orange', label:'Degraded' };
+      if(v.toLowerCase() === 'no') return { cls:'red', label:'No' };
+      // fallback: treat truthy-ish as Mid
+      return { cls: v.length>0 ? 'yellow' : 'red', label: v };
+    }
+
+    // count "working" services for overall box
+    // We'll count 'Yes' and 'Mid' as "working" (per earlier policy).
+    function isWorking(val){
+      if(!val) return false;
+      const v = String(val).trim().toLowerCase();
+      return v === 'yes' || v === 'mid';
+    }
+
+    // compute overall style by how many working out of 8
+    function overallForCount(count){
+      if(count <= 2) return { cls:'big-red', text:'Huge Maintenance' };
+      if(count <= 4) return { cls:'big-orange', text:'Degraded Performance' };
+      if(count <= 6) return { cls:'big-yellow', text:'Most Problems' };
+      if(count === 7) return { cls:'big-green', text:'A Small Problems' };
+      if(count >= 8) return { cls:'big-green', text:'All Services Working' };
+      return { cls:'big-red', text:'Unknown' };
+    }
+
+    // format history link
+    function makeHistoryButton(id){
+      const a = document.createElement('a');
+      a.href = `/status/history?history=${encodeURIComponent(id)}`;
+      a.className = 'hist-btn';
+      a.textContent = `Open ${id}`;
+      return a;
+    }
+
+    // get Current doc and history docs
+    async function loadStatus(){
+      try {
+        overallBox.textContent = 'Loading current status…';
+        // fetch CURRENT
+        const curRef = doc(db, 'status-uptime', 'Current');
+        const curSnap = await getDoc(curRef);
+        if(!curSnap.exists()){
+          overallBox.textContent = 'Current status not found';
+          servicesGrid.innerHTML = '<div style="color:var(--muted)">Current status doc missing.</div>';
+        } else {
+          const data = curSnap.data() || {};
+          // render expected 8 services
+          servicesGrid.innerHTML = '';
+          let workingCount = 0;
+          for(const key of EXPECTED_KEYS){
+            const val = data[key];
+            const mapped = stateColorMap(val);
+            if(isWorking(val)) workingCount++;
+            const row = document.createElement('div');
+            row.className = 'service-row';
+            const left = document.createElement('div');
+            left.textContent = prettyKey(key);
+            left.style.fontWeight = 700;
+            const right = document.createElement('div');
+            const pill = document.createElement('span');
+            pill.className = 'pill ' + mapped.cls;
+            pill.textContent = mapped.label;
+            right.appendChild(pill);
+            row.appendChild(left);
+            row.appendChild(right);
+            servicesGrid.appendChild(row);
+          }
+
+          // overall box
+          const o = overallForCount(workingCount);
+          overallBox.className = 'big-status ' + o.cls;
+          overallBox.textContent = `${o.text} — ${workingCount}/8 services nominal`;
+
+          // maintenance texts
+          // collect fields with keyword 'maintenance' or 'Maintenance' or 'Maintenance Text' (loose)
+          const maintenanceTexts = [];
+          for(const k of Object.keys(data)){
+            if(/maintenance/i.test(k) && data[k]){
+              // support both string or array
+              if(Array.isArray(data[k])) maintenanceTexts.push(...data[k].filter(Boolean));
+              else maintenanceTexts.push(String(data[k]));
+            }
+          }
+          if(maintenanceTexts.length > 0){
+            maintenanceArea.style.display = '';
+            maintenanceArea.innerHTML = '<strong style="display:block;margin-bottom:8px;color:#ffcc8a">Maintenance notes</strong>';
+            for(const t of maintenanceTexts){
+              const p = document.createElement('p');
+              p.textContent = t;
+              maintenanceArea.appendChild(p);
+            }
+          } else {
+            maintenanceArea.style.display = 'none';
+            maintenanceArea.innerHTML = '';
+          }
+        }
+
+        // fetch history docs in same collection
+        historyList.innerHTML = '';
+        const colSnap = await getDocs(collection(db, 'status-uptime'));
+        const historyDocs = [];
+        colSnap.forEach(docSnap => {
+          const id = docSnap.id;
+          if(id.toLowerCase().startsWith('history_')) historyDocs.push(id);
+        });
+
+        if(historyDocs.length === 0){
+          historyList.innerHTML = `<div class="hist-empty">not found history in 30 Days period.</div>`;
+        } else {
+          // display as buttons
+          for(const id of historyDocs){
+            const row = document.createElement('div');
+            row.className = 'hist-row';
+            const btn = makeHistoryButton(id);
+            row.appendChild(btn);
+            // optionally add small label with id truncated
+            const label = document.createElement('div');
+            label.style.color = 'var(--muted)';
+            label.style.marginLeft = '8px';
+            label.style.fontSize = '13px';
+            label.textContent = id;
+            row.appendChild(label);
+            historyList.appendChild(row);
+          }
+        }
+
+      } catch (err) {
+        console.error('loadStatus error', err);
+        overallBox.className = 'big-status big-red';
+        overallBox.textContent = 'Error loading status';
+        servicesGrid.innerHTML = `<div style="color:var(--muted)">Error: ${err.message || err}</div>`;
+        historyList.innerHTML = `<div class="hist-empty">Error loading history list</div>`;
+      }
+    }
+
+    // helper to prettify keys
+    function prettyKey(k){
+      // human-friendly labels for the 8 fields
+      const map = {
+        mainPageUp: 'Main Page',
+        loginUp: 'Login Page',
+        UsersUp: 'Users System',
+        ItemsUp: 'Items System',
+        CreatingItemesUp: 'Create Items',
+        StorageUp: 'Storage',
+        QuestUp: 'Quests',
+        userSettingsUp: 'User Settings'
+      };
+      return map[k] || k;
+    }
+
+    // initial load
+    loadStatus();
+
+    // refresh every 60s
+    setInterval(()=> { loadStatus().catch(()=>{}); }, 60_000);
+  </script>
+</body>
+    </html>
